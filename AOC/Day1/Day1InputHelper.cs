@@ -1,6 +1,6 @@
 ﻿namespace AOC_2023.Day1
 {
-    internal class Day1InputHelper : InputHelper<List<string>>
+    public class Day1InputHelper : InputHelper<List<string>>
     {
         public Day1InputHelper(string fileName) : base(fileName)
         {

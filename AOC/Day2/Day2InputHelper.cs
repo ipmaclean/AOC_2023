@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 namespace AOC_2023.Day2
 {
-    internal class Day2InputHelper : InputHelper<Dictionary<int, List<(int r, int g, int b)>>>
+    public class Day2InputHelper : InputHelper<Dictionary<int, List<(int r, int g, int b)>>>
     {
         public Day2InputHelper(string fileName) : base(fileName)
         {

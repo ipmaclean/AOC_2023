@@ -2,7 +2,7 @@
 
 namespace AOC_2023.Day4
 {
-    internal class Day4InputHelper : InputHelper<List<Ticket>>
+    public class Day4InputHelper : InputHelper<List<Ticket>>
     {
         public Day4InputHelper(string fileName) : base(fileName)
         {
