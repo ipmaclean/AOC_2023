@@ -3,7 +3,7 @@
     public class Day7PuzzleManager : PuzzleManager
     {
         public List<Hand> InputPartOne { get; set; }
-        public List<HandPartTwo> InputPartTwo { get; set; }
+        public List<Hand> InputPartTwo { get; set; }
         public Day7PuzzleManager()
         {
             var inputHelper = new Day7InputHelper(INPUT_FILE_NAME);
@@ -21,27 +21,26 @@
         public override Task SolvePartOne()
         {
             var hands = new List<Hand>(InputPartOne);
-            hands.Sort();
-            var solution = 0L;
-            for (var i = 0; i < hands.Count; i++)
-            {
-                solution += hands[i].Bid * ((long)i + 1);
-            }
-            Console.WriteLine($"The solution to part one is '{solution}'.");
+            Console.WriteLine($"The solution to part one is '{Solve(hands)}'.");
             return Task.CompletedTask;
         }
 
         public override Task SolvePartTwo()
         {
-            var hands = new List<HandPartTwo>(InputPartTwo);
+            var hands = new List<Hand>(InputPartTwo);
+            Console.WriteLine($"The solution to part two is '{Solve(hands)}'.");
+            return Task.CompletedTask;
+        }
+
+        private static long Solve(List<Hand> hands)
+        {
             hands.Sort();
             var solution = 0L;
             for (var i = 0; i < hands.Count; i++)
             {
                 solution += hands[i].Bid * ((long)i + 1);
             }
-            Console.WriteLine($"The solution to part two is '{solution}'.");
-            return Task.CompletedTask;
+            return solution;
         }
     }
 }
