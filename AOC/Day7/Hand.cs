@@ -4,11 +4,13 @@
     {
         public string Cards { get; set; }
         public long Bid { get; set; }
+        private int PuzzlePart { get; set; }
 
-        public Hand(string cards, long bid)
+        public Hand(string cards, long bid, int puzzlePart)
         {
             Cards = cards;
             Bid = bid;
+            PuzzlePart = puzzlePart;
         }
 
         public int CompareTo(Hand? otherHand)
@@ -38,7 +40,7 @@
                 return 1;
             }
 
-            var cardOrder = "23456789TJQKA";
+            var cardOrder = PuzzlePart == 1 ? "23456789TJQKA" : "J23456789TQKA";
 
             for (var i = 0; i < Cards.Length; i++)
             {
@@ -56,31 +58,97 @@
 
         public int GetCardsRank()
         {
-            if (Cards.Distinct().Count() == 1) // 5 of a kind
+            var cardsNoJokers = PuzzlePart == 1 ? Cards : Cards.Replace("J", string.Empty);
+            var jokerCount = 5 - cardsNoJokers.Length;
+            if (cardsNoJokers.Any(x => cardsNoJokers.Count(y => y == x) == 5)) // 5 of a kind
             {
                 return 6;
             }
-            if (Cards.Any(x => Cards.Count(y => y == x) == 4)) // 4 of a kind
+            if (cardsNoJokers.Any(x => cardsNoJokers.Count(y => y == x) == 4)) // 4 of a kind
             {
-                return 5;
+                if (jokerCount == 0)
+                {
+                    return 5; // 4 of a kind
+                }
+                if (jokerCount == 1)
+                {
+                    return 6; // 5 of a kind
+                }
+                throw new Exception("Unhandled card rank.");
             }
-            if (Cards.Any(x => Cards.Count(y => y == x) == 3) && Cards.Distinct().Count() == 2) // Full house
+            if (cardsNoJokers.Any(x => cardsNoJokers.Count(y => y == x) == 3) && cardsNoJokers.Distinct().Count() == 2 && jokerCount == 0) // Full house
             {
                 return 4;
             }
-            if (Cards.Any(x => Cards.Count(y => y == x) == 3)) // 3 of a kind
+            if (cardsNoJokers.Any(x => cardsNoJokers.Count(y => y == x) == 3))
             {
-                return 3;
+                if (jokerCount == 0)
+                {
+                    return 3; // 3 of a kind
+                }
+                if (jokerCount == 1)
+                {
+                    return 5; // 4 of a kind
+                }
+                if (jokerCount == 2)
+                {
+                    return 6; // 5 of a kind
+                }
+                throw new Exception("Unhandled card rank.");
             }
-            if (Cards.Count(x => Cards.Count(y => y == x) == 2) == 4) // 2 pair
+            if (cardsNoJokers.Count(x => cardsNoJokers.Count(y => y == x) == 2) == 4)
             {
-                return 2;
+                if (jokerCount == 0)
+                {
+                    return 2; // 2 pair
+                }
+                if (jokerCount == 1)
+                {
+                    return 4; // Full house
+                }
+                throw new Exception("Unhandled card rank.");
             }
-            if (Cards.Any(x => Cards.Count(y => y == x) == 2)) // Pair
+            if (cardsNoJokers.Any(x => cardsNoJokers.Count(y => y == x) == 2)) // Pair
             {
-                return 1;
+                if (jokerCount == 0)
+                {
+                    return 1; // Pair
+                }
+                if (jokerCount == 1)
+                {
+                    return 3; // 3 of a kind
+                }
+                if (jokerCount == 2)
+                {
+                    return 5; // 4 of a kind
+                }
+                if (jokerCount == 3)
+                {
+                    return 6; // 5 of a kind
+                }
+                throw new Exception("Unhandled card rank.");
             }
-            return 0;
+            if (jokerCount == 0)
+            {
+                return 0; // High card
+            }
+            if (jokerCount == 1)
+            {
+                return 1; // Pair
+            }
+            if (jokerCount == 2)
+            {
+                return 3; // 3 of a kind
+            }
+            if (jokerCount == 3)
+            {
+                return 5; // 4 of a kind
+            }
+            if (jokerCount == 4 || jokerCount == 5)
+            {
+                return 6; // 5 of a kind
+            }
+            throw new Exception("Unhandled card rank.");
         }
     }
 }
