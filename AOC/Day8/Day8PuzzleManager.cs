@@ -51,6 +51,14 @@
 
         public override Task SolvePartTwo()
         {
+            // This is potentially a very complex problem, if the times taken to
+            // arrive at the end nodes does not line up with the 'Directions' count
+            // for each start node.
+
+            // While initially trying to account for this, I found that the input
+            // was designed nicely so that this is always the case, so it is enough
+            // to find the LCM of the path length for each start node.
+
             var startNodes = Nodes.Where(x => x.Name[2] == 'A').ToList();
             var currentNodes = new List<Node>(startNodes);
             var endNodes = Nodes.Where(x => x.Name[2] == 'Z');
