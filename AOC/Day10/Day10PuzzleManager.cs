@@ -30,6 +30,7 @@ namespace AOC_2023.Day10
         {
             (var distance, var corners) = Solve();
             var area = CalculateArea(corners);
+            // Pick's theorem
             Console.WriteLine($"The solution to part two is '{1 + area - distance / 2}'.");
             return Task.CompletedTask;
         }
