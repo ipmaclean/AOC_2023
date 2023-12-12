@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿// Heavy inpsiration (read: cheating) drawn from https://github.com/encse/adventofcode/blob/master/2023/Day12/Solution.cs for part 2
+// I found the memoisation for this one really difficult to get my head around
 
 namespace AOC_2023.Day12
 {
@@ -20,76 +21,109 @@ namespace AOC_2023.Day12
 
         public override Task SolvePartOne()
         {
-            var solution = 0;
+            var solution = 0L;
             foreach (var record in Input)
             {
-                solution += CountValidConfigurations(record);
+                var cache = new Dictionary<(string springs, int countOfGroups), long>();
+                solution += Solve(record.Springs, 0, record.Groups, cache);
             }
             Console.WriteLine($"The solution to part one is '{solution}'.");
             return Task.CompletedTask;
         }
 
-        private int CountValidConfigurations(Record record)
-        {
-            var indicesOfSprings = FindIndicesOfCharInString(record.Springs, '#');
-            var springsToPlace = record.Groups.Sum() - indicesOfSprings.Count;
-            return springsToPlace > 0 ? PermutateAndCheck(record.Springs, record.Groups, springsToPlace, 0, 0) : 1;
-        }
-
-        private int PermutateAndCheck(string springs, List<int> groups, int springsToPlace, int startingIndexForPlacement, int totalValidPermutations)
-        {
-            var indicesOfUnknown = FindIndicesOfCharInString(springs, '?');
-            for (var i = startingIndexForPlacement; i < indicesOfUnknown.Count - springsToPlace + 1; i++)
-            {
-                var newSprings = springs.Remove(indicesOfUnknown[i], 1).Insert(indicesOfUnknown[i], "#");
-                if (springsToPlace - 1 > 0)
-                {
-                    totalValidPermutations = PermutateAndCheck(newSprings, groups, springsToPlace - 1, i, totalValidPermutations);
-                }
-                else
-                {
-                    totalValidPermutations = IsValidPermutation(newSprings, groups) ? totalValidPermutations + 1 : totalValidPermutations;
-                }
-            }
-            return totalValidPermutations;
-        }
-
-        private bool IsValidPermutation(string springs, List<int> groups)
-        {
-            var regex = new Regex(@"#+");
-            var matches = regex.Matches(springs);
-            if (matches.Count != groups.Count)
-            {
-                return false;
-            }
-            for (var i = 0; i < groups.Count; i++)
-            {
-                if (matches[i].Value.Length != groups[i])
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        private List<int> FindIndicesOfCharInString(string springs, char c)
-        {
-            var indices = new List<int>();
-            for (var i = 0; i < springs.Length; i++)
-            {
-                if (springs[i] == c)
-                {
-                    indices.Add(i);
-                }
-            }
-            return indices;
-        }
-
         public override Task SolvePartTwo()
         {
-            var solution = 0;
+            var solution = 0L;
+            foreach (var record in Input)
+            {
+                var springs = string.Empty;
+                var groups = new List<int>();
+                var delimiter = "";
+                for (var i = 0; i < 5; i++)
+                {
+                    springs += delimiter;
+                    springs += record.Springs;
+                    delimiter = "?";
+                    groups.AddRange(record.Groups);
+                }
+                var cache = new Dictionary<(string springs, int countOfGroups), long>();
+                solution += Solve(springs, 0, groups, cache);
+            }
             Console.WriteLine($"The solution to part two is '{solution}'.");
             return Task.CompletedTask;
         }
+
+        private long Solve(
+            string springs,
+            int countOfGroups,
+            List<int> groups,
+            Dictionary<(string springs, int countOfGroups), long> cache
+            )
+        {
+            if (!cache.ContainsKey((springs, countOfGroups)))
+            {
+                cache[(springs, countOfGroups)] = CountValidConfigurations(springs, countOfGroups, groups, cache);
+            }
+            return cache[(springs, countOfGroups)];
+        }
+
+        private long CountValidConfigurations(
+            string springs,
+            int countOfGroups,
+            List<int> groups,
+            Dictionary<(string springs, int countOfGroups), long> cache
+            )
+            => springs.FirstOrDefault() switch
+            {
+                '.' => ProcessDot(springs, countOfGroups, groups, cache),
+                '#' => ProcessHash(springs, countOfGroups, groups, cache),
+                '?' => ProcessQuestionMark(springs, countOfGroups, groups, cache),
+                _ => countOfGroups == groups.Count ? 1 : 0,
+            };
+
+        private long ProcessDot(
+            string springs,
+            int countOfGroups,
+            List<int> groups,
+            Dictionary<(string springs, int countOfGroups), long> cache)
+            => Solve(springs[1..], countOfGroups, groups, cache);
+
+        private long ProcessHash(
+            string springs,
+            int countOfGroups,
+            List<int> groups,
+            Dictionary<(string springs, int countOfGroups), long> cache)
+        {
+            if (groups.Count == countOfGroups)
+            {
+                return 0;
+            }
+
+            var potentiallyHash = springs.TakeWhile(s => s == '#' || s == '?').Count();
+
+            if (potentiallyHash < groups[countOfGroups])
+            {
+                return 0; // Not enough dead springs 
+            }
+            else if (springs.Length == groups[countOfGroups])
+            {
+                return Solve(string.Empty, countOfGroups + 1, groups, cache); // We've reached the end of the springs
+            }
+            else if (springs[groups[countOfGroups]] == '#')
+            {
+                return 0; // Dead spring follows the range -> too many for the current group
+            }
+            else
+            {
+                return Solve(springs[(groups[countOfGroups] + 1)..], countOfGroups + 1, groups, cache); // Cut off the group plus 1 more (will be '.' or '?') and add to the group count
+            }
+        }
+
+        private long ProcessQuestionMark(
+            string springs,
+            int countOfGroups,
+            List<int> groups,
+            Dictionary<(string springs, int countOfGroups), long> cache)
+            => Solve("." + springs[1..], countOfGroups, groups, cache) + Solve("#" + springs[1..], countOfGroups, groups, cache);
     }
 }
