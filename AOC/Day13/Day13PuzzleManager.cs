@@ -48,68 +48,32 @@
             foreach (var scan in Input)
             {
                 counter++;
-                // In many cases, the part one solutions are still valid -
-                // we will not check these lines of reflection
-                int? verticalSkip = null;
-                var originalVerticalReflection = FindVerticalReflection(scan);
-                if (originalVerticalReflection != -1)
+                var verticalReflection = FindVerticalReflection(scan, 1);
+                if (verticalReflection != -1)
                 {
-                    verticalSkip = originalVerticalReflection;
+                    solution += verticalReflection;
+                    continue;
                 }
-                int? horizontalSkip = null;
-                var originalHorizontalReflection = FindVerticalReflection(scan.CloneAndRotate());
-                if (originalHorizontalReflection != -1)
+                var horizontalReflection = FindVerticalReflection(scan.CloneAndRotate(), 1);
+                if (horizontalReflection != -1)
                 {
-                    horizontalSkip = originalHorizontalReflection;
+                    solution += 100 * horizontalReflection;
+                    continue;
                 }
-                if (verticalSkip is null && horizontalSkip is null)
-                {
-                    throw new InvalidOperationException($"Did not find a reflection for input '{counter}'.");
-                }
-
-                var foundReflection = false;
-                for (var x = 0; x < scan.Rows[0].Count; x++)
-                {
-                    for (var y = 0; y < scan.Rows.Count; y++)
-                    {
-                        var scanClone = scan.Clone();
-                        scanClone.Rows[y][x] = scanClone.Rows[y][x] == '#' ? '.' : '#';
-                        var verticalReflection = FindVerticalReflection(scanClone, verticalSkip);
-                        if (verticalReflection != -1)
-                        {
-                            solution += verticalReflection;
-                            foundReflection = true;
-                            break;
-                        }
-                        var horizontalReflection = FindVerticalReflection(scanClone.CloneAndRotate(), horizontalSkip);
-                        if (horizontalReflection != -1)
-                        {
-                            solution += 100 * horizontalReflection;
-                            foundReflection = true;
-                            break;
-                        }
-                    }
-                    if (foundReflection)
-                    {
-                        break;
-                    }
-                }
+                throw new InvalidOperationException($"Did not find a reflection for input '{counter}'.");
             }
             Console.WriteLine($"The solution to part two is '{solution}'.");
             return Task.CompletedTask;
         }
 
-        private int FindVerticalReflection(GroundScan scan, int? skipColumn = null)
+        private int FindVerticalReflection(GroundScan scan, int differencesWanted = 0)
         {
             var reflectionIndex = -1;
             var totalWidth = scan.Rows.First().Count;
             for (var i = 1; i < totalWidth; i++)
             {
-                if (skipColumn is not null && skipColumn == i)
-                {
-                    continue;
-                }
                 var isValidReflection = true;
+                var differencesFound = 0;
                 var widthToCheck = Math.Min(i, totalWidth - i);
                 foreach (var row in scan.Rows)
                 {
@@ -117,16 +81,19 @@
                     {
                         if (row[i - j - 1] != row[i + j])
                         {
-                            isValidReflection = false;
+                            if (++differencesFound > differencesWanted)
+                            {
+                                isValidReflection = false;
+                                break;
+                            }
+                        }
+                        if (!isValidReflection)
+                        {
                             break;
                         }
                     }
-                    if (!isValidReflection)
-                    {
-                        break;
-                    }
                 }
-                if (isValidReflection)
+                if (differencesFound == differencesWanted)
                 {
                     reflectionIndex = i;
                     return reflectionIndex;
