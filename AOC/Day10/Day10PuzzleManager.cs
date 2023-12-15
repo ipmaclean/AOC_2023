@@ -1,7 +1,4 @@
-﻿
-using System.Diagnostics.CodeAnalysis;
-
-namespace AOC_2023.Day10
+﻿namespace AOC_2023.Day10
 {
     public class Day10PuzzleManager : PuzzleManager
     {
