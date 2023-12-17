@@ -1,6 +1,8 @@
 ﻿using BfsStateNoDistance = (int x, int y, AOC_2023.Day17.Direction direction, int distanceTravelledStraight);
 using BfsState = (int x, int y, AOC_2023.Day17.Direction direction, int distanceTravelledStraight, int totalDistance);
 
+// This puzzle only works with a square input - notably it will fail on the second part 2 example
+
 namespace AOC_2023.Day17
 {
     public class Day17PuzzleManager : PuzzleManager
@@ -21,17 +23,24 @@ namespace AOC_2023.Day17
 
         public override Task SolvePartOne()
         {
-            Console.WriteLine($"The solution to part one is '{FindShortestPath(Input)}'.");
+            Console.WriteLine($"The solution to part one is '{FindShortestPath(Input, 0, 3)}'.");
             return Task.CompletedTask;
         }
 
-        private int FindShortestPath(int[,] input)
+        public override Task SolvePartTwo()
+        {
+            Console.WriteLine($"The solution to part two is '{FindShortestPath(Input, 4, 10)}'.");
+            return Task.CompletedTask;
+        }
+
+        private int FindShortestPath(int[,] input, int minimumStraightBeforeTurn, int maximumStraightBeforeTurn)
         {
             // Because we can't discount visited nodes, we can't use Dijkstra.
             // We'll instead use a priority queue BFS with a state including
             // distance travelled straight and direction (along with total distance).
             var states = new PriorityQueue<BfsState, int>();
             states.Enqueue((0, 0, Direction.East, 0, 0), 0);
+            states.Enqueue((0, 0, Direction.South, 0, 0), 0);
             var visitedStates = new HashSet<BfsStateNoDistance>();
 
             while (states.Count > 0)
@@ -68,7 +77,12 @@ namespace AOC_2023.Day17
                 // add the the queue of states to visit.
                 foreach (var nextState in nextStates)
                 {
-                    if (nextState.distanceTravelledStraight > 3)
+                    if (nextState.distanceTravelledStraight > maximumStraightBeforeTurn)
+                    {
+                        continue;
+                    }
+                    if (nextState.direction != currentState.direction &&
+                        currentState.distanceTravelledStraight < minimumStraightBeforeTurn)
                     {
                         continue;
                     }
@@ -81,7 +95,12 @@ namespace AOC_2023.Day17
                     {
                         continue;
                     }
-                    if (nextState.x == input.GetLength(0) - 1 && nextState.y == input.GetLength(0) - 1)
+                    if (nextState.x == input.GetLength(0) - 1 && nextState.y == input.GetLength(0) - 1 &&
+                        nextState.distanceTravelledStraight < minimumStraightBeforeTurn)
+                    {
+                        continue;
+                    }
+                    else if (nextState.x == input.GetLength(0) - 1 && nextState.y == input.GetLength(0) - 1)
                     {
                         return currentState.totalDistance + input[nextState.x, nextState.y];
                     }
@@ -93,13 +112,6 @@ namespace AOC_2023.Day17
                 }
             }
             return -1;
-        }
-
-        public override Task SolvePartTwo()
-        {
-            var solution = 0;
-            Console.WriteLine($"The solution to part two is '{solution}'.");
-            return Task.CompletedTask;
         }
     }
 }
