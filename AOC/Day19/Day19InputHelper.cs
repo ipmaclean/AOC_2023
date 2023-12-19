@@ -59,12 +59,13 @@ namespace AOC_2023.Day19
                     if (split[0].Contains("<"))
                     {
                         test = (long category) => category < valueToCompare;
+                        rules.Add(new Rule(split[1], machineProperty, test, '<'));
                     }
                     else
                     {
                         test = (long category) => category > valueToCompare;
+                        rules.Add(new Rule(split[1], machineProperty, test, '>'));
                     }
-                    rules.Add(new Rule(split[1], machineProperty, test));
                 }
             }
 
