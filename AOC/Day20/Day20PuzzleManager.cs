@@ -16,14 +16,35 @@
 
         public override Task SolvePartOne()
         {
+            Console.WriteLine($"The solution to part one is '{Solve(1)}'.");
+            return Task.CompletedTask;
+        }
+
+        public override Task SolvePartTwo()
+        {
+            Console.WriteLine($"The solution to part two is '{Solve(2)}'.");
+            return Task.CompletedTask;
+        }
+
+        private long Solve(int puzzlePart)
+        {
             var inputHelper = new Day20InputHelper(INPUT_FILE_NAME);
             Modules = inputHelper.Parse();
 
             var lowPulseCount = 0L;
             var highPulseCount = 0L;
             var pulseQueue = new Queue<(string to, string from, Pulse pulse)>();
-            var timesToPushButton = 1000;
-            for (var i = 0; i < timesToPushButton; i++)
+            var timesToPushButton = puzzlePart == 1 ? 1000L : -1L;
+
+            // The below were found from using Graphviz to analyse the input.
+            // These are the end of four closed loops and when each of these
+            // emit a high pulse to 'nc' on the same button press then this
+            // is the solution.
+            // Therefore we work out when each of these loop and find the
+            // lcm of the four loop lengths.
+            var penultimates = new List<string>() { "hh", "fh", "lk", "fn" };
+            var loops = new Dictionary<string, long>();
+            while (timesToPushButton-- != 0)
             {
                 pulseQueue.Enqueue(("broadcaster", "button", Pulse.Low));
                 while (pulseQueue.Any())
@@ -37,24 +58,39 @@
                     var outputs = Modules[instruction.to].ProcessPulse(instruction.from, instruction.pulse);
                     foreach (var output in outputs)
                     {
+
+                        if (output.to == "nc" && penultimates.Contains(output.from) && output.pulse == Pulse.High)
+                        {
+                            if (!loops.ContainsKey(output.from))
+                            {
+                                loops.Add(output.from, Math.Abs(timesToPushButton + 1));
+                            }
+                            if (loops.Count == 4)
+                            {
+                                return loops.Values.Aggregate(1L, (acc, val) => Lcm(acc, val));
+                            }
+                        }
                         pulseQueue.Enqueue(output);
                     }
                 }
             }
-            Console.WriteLine($"The solution to part one is '{lowPulseCount * highPulseCount}'.");
-            return Task.CompletedTask;
+            return lowPulseCount * highPulseCount;
         }
 
-        public override Task SolvePartTwo()
+        static long Gcf(long a, long b)
         {
-            var inputHelper = new Day20InputHelper(INPUT_FILE_NAME);
-            Modules = inputHelper.Parse();
+            while (b != 0)
+            {
+                long temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
 
-
-
-            var solution = 0;
-            Console.WriteLine($"The solution to part two is '{solution}'.");
-            return Task.CompletedTask;
+        static long Lcm(long a, long b)
+        {
+            return (a / Gcf(a, b)) * b;
         }
     }
 }
