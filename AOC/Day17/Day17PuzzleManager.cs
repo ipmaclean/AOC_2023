@@ -1,7 +1,7 @@
 ﻿using BfsStateNoDistance = (int x, int y, AOC_2023.Day17.Direction direction, int distanceTravelledStraight);
 using BfsState = (int x, int y, AOC_2023.Day17.Direction direction, int distanceTravelledStraight, int totalDistance);
 
-// This puzzle only works with a square input - notably it will fail on the second part 2 example
+// This solution only works with a square input - notably it will fail on the second part 2 example
 
 namespace AOC_2023.Day17
 {
