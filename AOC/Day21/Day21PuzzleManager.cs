@@ -1,7 +1,8 @@
-﻿using BfsStateNoDistance = (int x, int y);
-using BfsState = (int x, int y, int distanceTravelled);
+﻿using BfsStateNoDistance = (long x, long y);
+using BfsState = (long x, long y, long distanceTravelled);
 
 // This solution only works with a square input
+// and possibly with some special properties of the input!
 
 namespace AOC_2023.Day21
 {
@@ -23,25 +24,54 @@ namespace AOC_2023.Day21
 
         public override Task SolvePartOne()
         {
-            // Simple BFS, but we'll only log states with even steps taken for our solution.
+            Console.WriteLine($"The solution to part one is '{Solve(64)}'.");
+            return Task.CompletedTask;
+        }
 
-            var totalSteps = 64;
+        public override Task SolvePartTwo()
+        {
+            // When increasing the steps by the width of the input the solutions
+            // form a sequence - namely a quadratic one.
+            var stepsToTake = 26501365L;
+            var remainder = stepsToTake % Input.GetLength(0);
+            var quotient = (stepsToTake - remainder) / Input.GetLength(0);
+            var sequence = new List<long>();
+            for (var i = 1; i < 4; i++)
+            {
+                sequence.Add(Solve(remainder + i * Input.GetLength(0)));
+            }
+            var lastValue = sequence.Last();
+            var firstDifference = GetLatestFirstDifference(sequence);
+            var secondDifference = GetSecondDifference(sequence);
+            for (var i = 0; i < quotient - 3; i++)
+            {
+                firstDifference += secondDifference;
+                lastValue += firstDifference;
+            }
+            Console.WriteLine($"The solution to part two is '{lastValue}'.");
+
+            return Task.CompletedTask;
+        }
+
+        private long Solve(long totalSteps)
+        {
             var statesToVisit = new Queue<BfsState>();
             var startCoords = FindStart(Input);
             statesToVisit.Enqueue((startCoords.x, startCoords.y, 0));
-            var visitedStates = new HashSet<BfsStateNoDistance>();
+            var visitedStates = new Dictionary<BfsStateNoDistance, long>();
 
-            var solution = 0;
+            var solution = 0L;
 
             while (statesToVisit.Count > 0)
             {
                 var currentState = statesToVisit.Dequeue();
-                if (visitedStates.Contains((currentState.x, currentState.y)))
+                if (visitedStates.ContainsKey((currentState.x, currentState.y)))
                 {
                     continue;
                 }
-                visitedStates.Add((currentState.x, currentState.y));
-                if (currentState.distanceTravelled % 2 == 0)
+                visitedStates.Add((currentState.x, currentState.y), currentState.distanceTravelled);
+                if (totalSteps % 2 == 0 && currentState.distanceTravelled % 2 == 0 ||
+                    totalSteps % 2 == 1 && currentState.distanceTravelled % 2 == 1)
                 {
                     solution++;
                 }
@@ -49,36 +79,27 @@ namespace AOC_2023.Day21
                 {
                     continue;
                 }
-                var directions = new List<(int x, int y)>() { (1, 0), (-1, 0), (0, 1), (0, -1) };
+                var directions = new List<(long x, long y)>() { (1, 0), (-1, 0), (0, 1), (0, -1) };
                 foreach (var direction in directions)
                 {
                     var nextX = currentState.x + direction.x;
                     var nextY = currentState.y + direction.y;
-                    if (nextX < 0 || nextX >= Input.GetLength(0) ||
-                        nextY < 0 || nextY >= Input.GetLength(1) ||
-                        Input[nextX, nextY] == '#')
+                    var nextTile = Input[Modulo(nextX, Input.GetLength(0)), Modulo(nextY, Input.GetLength(1))];
+                    if (nextTile == '#')
                     {
                         continue;
                     }
-                    if (visitedStates.Contains((nextX, nextY)))
+                    if (visitedStates.ContainsKey((nextX, nextY)))
                     {
                         continue;
                     }
                     statesToVisit.Enqueue((nextX, nextY, currentState.distanceTravelled + 1));
                 }
             }
-            Console.WriteLine($"The solution to part one is '{solution}'.");
-            return Task.CompletedTask;
+            return solution;
         }
 
-        public override Task SolvePartTwo()
-        {
-            var solution = 0;
-            Console.WriteLine($"The solution to part two is '{solution}'.");
-            return Task.CompletedTask;
-        }
-
-        private (int x, int y) FindStart(char[,] input)
+        private (long x, long y) FindStart(char[,] input)
         {
             for (var y = 0; y < input.GetLength(1); y++)
             {
@@ -91,6 +112,25 @@ namespace AOC_2023.Day21
                 }
             }
             throw new InvalidOperationException("Could not find start coords.");
+        }
+
+        private static long Modulo(long x, long m)
+        {
+            long r = x % m;
+            return r < 0 ? r + m : r;
+        }
+
+        private long GetLatestFirstDifference(List<long> sequence)
+            => sequence.Last() - sequence[sequence.Count - 2];
+
+        private long GetSecondDifference(List<long> sequence)
+        {
+            var differences = new List<long>();
+            for (var i = 0; i < sequence.Count - 1; i++)
+            {
+                differences.Add(sequence[i + 1] - sequence[i]);
+            }
+            return differences[1] - differences[0];
         }
     }
 }
