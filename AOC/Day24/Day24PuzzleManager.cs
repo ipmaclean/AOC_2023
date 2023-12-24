@@ -42,7 +42,9 @@
 
         public override Task SolvePartTwo()
         {
-            var solution = 0;
+            // I used a free trial of Wolfram Mathematica
+            var solution = 472612107765508 + 270148844447628 + 273604689965980;
+            // velocity = -333, -5, 15
             Console.WriteLine($"The solution to part two is '{solution}'.");
             return Task.CompletedTask;
         }
